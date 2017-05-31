@@ -32,4 +32,22 @@ for i in range(len(day)):
 edf['T1'] = day / 360
 edf['T2'] = (day + 90) / 360
 
-edf['Fwd'] = (edf['Fut'] / 100) - (0.5 * (edf['Vol'] ** 2) * edf['T1'] * edf['T2'])
+edf['Fwd'] = (edf['Fut'] / 100) - (0.5 * (edf['Vol'] ** 2) \
+                                   * edf['T1'] * edf['T2'])
+
+edffwd = edf[['Fwd', 'T1']]['EDU7 Comdty':]
+#%%
+ir = np.zeros(22)
+ir[0] = 4 * np.log(1 + (libor['PX_MID'] / 100) * 0.25)
+
+dct = np.zeros(22)
+dct[0] = np.exp(-ir[0] * edffwd['T1'][0])
+
+for i in range(len(edffwd)):
+    t1 = edffwd['T1'][i]
+    t2 = t1 + 0.25
+    
+    r = ((ir[i] * t1) + edffwd['Fwd'][i] * (t2 - t1)) / t2
+    d = np.exp(-r * t2)
+    ir[i+1] = r
+    dct[i+1] = d
