@@ -74,6 +74,39 @@ for i in [0.5, 1, 1.5, 2]:
     swap_term['SR'][i] = irterm['IR'][i]
     swap_term['DF'][i] = irterm['DF'][i]
 
-i = 3
-c = swap['PMT'][i-1]
-c_sum = (c * swap_term['DF'][:(i-1)]).sum()
+for i in range(3, 13):
+    c = swap['PMT'][i-1]
+    a = 100 + c
+    y = np.sqrt(swap_term['DF'][i-1])
+    c_sum = (c * swap_term['DF'][:(i-1)]).sum()
+    
+    sol = sop.root(quad, 100, args = (a, c * y, c_sum - 100))
+    d = float(sol.x ** 2)
+    r = -np.log(d) / i
+    d1 = np.sqrt(d * swap_term['DF'][i-1])
+    r1 = -np.log(d1) / (i - 0.5)
+    
+    swap_term['SR'][i] = r
+    swap_term['DF'][i] = d
+    swap_term['SR'][i - 0.5] = r1
+    swap_term['DF'][i - 0.5] = d1
+#%%
+def findP(x, start, end):
+    freq = (end - start) * 2
+    c = swap['PMT']['USSWAP%d Curncy' %end]
+    c_sum = (c * swap_term['DF'][:(start)]).sum()
+    
+    temp = 0
+    for i in range(start, end + 1):
+        temp += swap_term['DF'][start] ** ((i - start + 1) / freq) +\
+                x ** ((freq - (i - start + 1)) / freq) 
+    result = temp * c + 100 * x
+    
+    return result + c_sum - 100
+
+matlist = [12, 15, 20, 25, 30, 40]
+for i in range(len(matlist) - 1):
+    d = float(sop.root(findP, 0, args = (matlist[i], matlist[i+1])).x)
+    r = -np.log(d) / matlist[i+1]
+    swap_term['SR'][matlist[i+1]] = r
+    swap_term['DF'][matlist[i+1]] = d
