@@ -10,6 +10,10 @@ import pandas as pd
 import numpy as np
 import datetime as dat
 from dateutil import relativedelta as reldt
+import scipy.optimize as sop
+#%%
+def quad(x, a, b, c):
+    return (a * (x**2)) + b * x + c
 #%%
 libor = pd.read_excel('libor.xlsx')
 edf = pd.read_excel('edf.xlsx')
@@ -39,12 +43,12 @@ edffwd = edf[['Fwd', 'T1']]['EDU7 Comdty':]
 
 swap['PMT'] = 0.5 * swap['PX_MID']
 #%%
-mat = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-       11, 12, 15, 20, 25, 30, 40]
-ir = np.zeros(22)
+ir_mat = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
+
+ir = np.zeros(7)
 ir[0] = 4 * np.log(1 + (libor['PX_MID'] / 100) * 0.25)
 
-dct = np.zeros(22)
+dct = np.zeros(7)
 dct[0] = np.exp(-ir[0] * edffwd['T1'][0])
 
 for i in range(len(edffwd)):
@@ -60,5 +64,16 @@ dct[6] = (100 - swap['PMT'][0] * (dct[1] + dct[3] + dct[5])) / (100 + swap['PMT'
 ir[6] = -np.log(dct[6]) / 2
     
 #%%
-term = pd.DataFrame(ir, index = mat, columns = ['IR'])
-term['DF'] = np.exp(-term['IR'] * term.index)
+irterm = pd.DataFrame(ir, index = ir_mat, columns = ['IR'])
+irterm['DF'] = np.exp(-irterm['IR'] * irterm.index)
+#%%
+swap_mat = [0.5 * i for i in range(1, 81)]
+swap_term = pd.DataFrame(index = swap_mat, columns = [['SR', 'DF']])
+
+for i in [0.5, 1, 1.5, 2]:
+    swap_term['SR'][i] = irterm['IR'][i]
+    swap_term['DF'][i] = irterm['DF'][i]
+
+i = 3
+c = swap['PMT'][i-1]
+c_sum = (c * swap_term['DF'][:(i-1)]).sum()
