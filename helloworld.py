@@ -10,4 +10,3 @@ Created on Wed May 31 11:13:59 2017
 
 print("Hello World!")
 print("Tell your world")
-print("YOLO")
