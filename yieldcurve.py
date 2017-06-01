@@ -11,6 +11,7 @@ import numpy as np
 import datetime as dat
 from dateutil import relativedelta as reldt
 import scipy.optimize as sop
+from scipy.interpolate import interp1d
 #%%
 def quad(x, a, b, c):
     return (a * (x**2)) + b * x + c
@@ -68,6 +69,21 @@ irterm = pd.DataFrame(ir, index = ir_mat, columns = ['IR'])
 irterm['DF'] = np.exp(-irterm['IR'] * irterm.index)
 #%%
 swap_mat = [0.5 * i for i in range(1, 81)]
+swapterm = pd.DataFrame(index = swap_mat, columns = ['IR', 'DF'])
+for i in range(1, 5):
+    swapterm['IR'][0.5 * i] = irterm['IR'][0.5 * i]
+    swapterm['DF'][0.5 * i] = irterm['DF'][0.5 * i]
+#%%
+start = 2
+end = 3
+freq = (end - start) * 2
+r = np.zeros(freq)
+d = np.zeros(freq)
+x = np.array([start, end])
+
+#%%
+'''
+swap_mat = [0.5 * i for i in range(1, 81)]
 swap_term = pd.DataFrame(index = swap_mat, columns = [['SR', 'DF']])
 
 for i in [0.5, 1, 1.5, 2]:
@@ -110,3 +126,4 @@ for i in range(len(matlist) - 1):
     r = -np.log(d) / matlist[i+1]
     swap_term['SR'][matlist[i+1]] = r
     swap_term['DF'][matlist[i+1]] = d
+'''
