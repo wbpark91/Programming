@@ -91,51 +91,29 @@ def findr(r, startyr, endyr):
     result = c_sum + (c * df[:-1]).sum() + (100 + c) * df[-1]
     return result - 100
 
-r0 = float(sop.root(findr, 0, args = (startyr, endyr)).x)
 
-#%%
-'''
-swap_mat = [0.5 * i for i in range(1, 81)]
-swap_term = pd.DataFrame(index = swap_mat, columns = [['SR', 'DF']])
+def DfandR(r, startyr, endyr):
+    freq = (endyr - startyr) * 2
+    d = np.zeros(freq)
+    x = np.array([startyr, endyr])
+    y = np.array([swapterm['IR'][startyr], r0])
+    f = interp1d(x, y)
+    k = np.arange(startyr + 0.5, endyr + 0.5, 0.5)
+    r = f(k)
+    d = np.exp(-r * k)
+    
+    return r, d, k
 
-for i in [0.5, 1, 1.5, 2]:
-    swap_term['SR'][i] = irterm['IR'][i]
-    swap_term['DF'][i] = irterm['DF'][i]
-
-for i in range(3, 13):
-    c = swap['PMT'][i-1]
-    a = 100 + c
-    y = np.sqrt(swap_term['DF'][i-1])
-    c_sum = (c * swap_term['DF'][:(i-1)]).sum()
-    
-    sol = sop.root(quad, 100, args = (a, c * y, c_sum - 100))
-    d = float(sol.x ** 2)
-    r = -np.log(d) / i
-    d1 = np.sqrt(d * swap_term['DF'][i-1])
-    r1 = -np.log(d1) / (i - 0.5)
-    
-    swap_term['SR'][i] = r
-    swap_term['DF'][i] = d
-    swap_term['SR'][i - 0.5] = r1
-    swap_term['DF'][i - 0.5] = d1
-#%%
-def findP(x, start, end):
-    freq = (end - start) * 2
-    c = swap['PMT']['USSWAP%d Curncy' %end]
-    c_sum = (c * swap_term['DF'][:(start)]).sum()
-    
-    temp = 0
-    for i in range(start, end + 1):
-        temp += swap_term['DF'][start] ** ((i - start + 1) / freq) +\
-                x ** ((freq - (i - start + 1)) / freq) 
-    result = temp * c + 100 * x
-    
-    return result + c_sum - 100
-
-matlist = [12, 15, 20, 25, 30, 40]
+matlist = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30, 40]
 for i in range(len(matlist) - 1):
-    d = float(sop.root(findP, 0, args = (matlist[i], matlist[i+1])).x)
-    r = -np.log(d) / matlist[i+1]
-    swap_term['SR'][matlist[i+1]] = r
-    swap_term['DF'][matlist[i+1]] = d
-'''
+    startyr = matlist[i]
+    endyr = matlist[i+1]
+    
+    r0 = float(sop.root(findr, 0, args = (startyr, endyr)).x)
+    
+    x = DfandR(r0, startyr, endyr)
+    
+    swapterm['IR'][x[2]] = x[0]
+    swapterm['DF'][x[2]] = x[1]
+    
+result = irterm.append(swapterm[2.5:])
