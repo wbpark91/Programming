@@ -74,12 +74,18 @@ for i in range(1, 5):
     swapterm['IR'][0.5 * i] = irterm['IR'][0.5 * i]
     swapterm['DF'][0.5 * i] = irterm['DF'][0.5 * i]
 #%%
-start = 2
-end = 3
-freq = (end - start) * 2
+startyr = 2
+endyr = 3
+c = swap['PMT']['USSWAP%d Curncy' %endyr]
+c_sum = (c * swapterm['DF'][:startyr]).sum()
+
+freq = (endyr - startyr) * 2
 r = np.zeros(freq)
 d = np.zeros(freq)
-x = np.array([start, end])
+x = np.array([startyr, endyr])
+y = np.array([swapterm['DF'][startyr], swapterm['DF'][endyr]])
+k = np.arange()
+f = interp1d(x, y)
 
 #%%
 '''
