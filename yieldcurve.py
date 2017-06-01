@@ -9,12 +9,9 @@ Created on Wed May 31 19:40:20 2017
 import pandas as pd
 import numpy as np
 import datetime as dat
-from dateutil import relativedelta as reldt
 import scipy.optimize as sop
 from scipy.interpolate import interp1d
-#%%
-def quad(x, a, b, c):
-    return (a * (x**2)) + b * x + c
+import matplotlib.pyplot as plt
 #%%
 libor = pd.read_excel('libor.xlsx')
 edf = pd.read_excel('edf.xlsx')
@@ -23,6 +20,7 @@ vol = pd.read_excel('vol.xlsx', index_col = 0) / 10000
 
 today = dat.datetime(2017, 5, 31)
 #%%
+#Data Handling: Convexity Adjustment and Day Representation
 edf['Fut'] = 100 - edf['PX_MID']
 impvol = np.array(vol['1Yr'][:'2Yr'])
 impvol[5] = impvol[4]
@@ -44,6 +42,7 @@ edffwd = edf[['Fwd', 'T1']]['EDU7 Comdty':]
 
 swap['PMT'] = 0.5 * swap['PX_MID']
 #%%
+#Short - Mid Term
 ir_mat = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
 
 ir = np.zeros(7)
@@ -74,9 +73,7 @@ for i in range(1, 5):
     swapterm['IR'][0.5 * i] = irterm['IR'][0.5 * i]
     swapterm['DF'][0.5 * i] = irterm['DF'][0.5 * i]
 #%%
-startyr = 2
-endyr = 3
-
+#Long Term
 def findr(r, startyr, endyr):
     c = swap['PMT']['USSWAP%d Curncy' %endyr]
     c_sum = (c * swapterm['DF'][:startyr]).sum()
@@ -105,6 +102,7 @@ def DfandR(r, startyr, endyr):
     return r, d, k
 
 matlist = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30, 40]
+
 for i in range(len(matlist) - 1):
     startyr = matlist[i]
     endyr = matlist[i+1]
@@ -117,3 +115,5 @@ for i in range(len(matlist) - 1):
     swapterm['DF'][x[2]] = x[1]
     
 result = irterm.append(swapterm[2.5:])
+
+result.plot(subplots = True, figsize = (12, 5))
