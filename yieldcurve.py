@@ -76,16 +76,22 @@ for i in range(1, 5):
 #%%
 startyr = 2
 endyr = 3
-c = swap['PMT']['USSWAP%d Curncy' %endyr]
-c_sum = (c * swapterm['DF'][:startyr]).sum()
 
-freq = (endyr - startyr) * 2
-r = np.zeros(freq)
-d = np.zeros(freq)
-x = np.array([startyr, endyr])
-y = np.array([swapterm['DF'][startyr], swapterm['DF'][endyr]])
-k = np.arange()
-f = interp1d(x, y)
+def findr(r, startyr, endyr):
+    c = swap['PMT']['USSWAP%d Curncy' %endyr]
+    c_sum = (c * swapterm['DF'][:startyr]).sum()
+    
+    x = np.array([startyr, endyr])
+    y = np.array([swapterm['IR'][startyr], r])
+    k = np.arange(startyr + 0.5, endyr + 0.5, 0.5)
+    f = interp1d(x, y)
+    
+    df = np.exp(-k * f(k))
+    
+    result = c_sum + (c * df[:-1]).sum() + (100 + c) * df[-1]
+    return result - 100
+
+r0 = float(sop.root(findr, 0, args = (startyr, endyr)).x)
 
 #%%
 '''
